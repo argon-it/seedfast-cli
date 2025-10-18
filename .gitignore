@@ -1,0 +1,16 @@
+compose.yml
+create_tables.sql
+recursive_tables.sql
+reset_and_run.sh
+.env
+go.mod
+go.mod
+go.sum
+seedfast.exe
+.idea\
+.idea
+.claude
+CLAUDE.md
+gocache
+gocache\
+internal\keychain\README.md

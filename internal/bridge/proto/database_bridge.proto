@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package database_bridge;
+
+// Main service for client connections and agent control
+service DatabaseBridge {
+  // Bidirectional stream: Client sends SQL responses, Server sends SQL requests and UI events
+  //
+  // Authentication:
+  // Client MUST send access token via gRPC metadata header "authorization" with value "Bearer <token>"
+  // The token will be validated on the server side before processing any messages.
+  // Token is kept in-memory (RAM) for the duration of the seeding process (max 20 minutes TTL).
+  // After seeding completes or TTL expires, the token is cleared from memory.
+  rpc run_seeding(stream ClientMessage) returns (stream ServerMessage);
+}
+
+// Messages sent from client to server
+message ClientMessage {
+  oneof message {
+    InitRequest init = 1;           // First message: initialize session
+    SQLResponse sql_response = 2;   // SQL execution result
+  }
+}
+
+// Messages sent from server to client
+message ServerMessage {
+  oneof message {
+    SQLRequest sql_request = 1;     // Request to execute SQL
+    UIEvent ui_event = 2;           // UI event for display
+  }
+}
+
+// Session initialization
+message InitRequest {
+  string session_id = 1;      // Client session ID (empty to create new)
+  string db_name = 2;         // Database name to seed
+}
+
+// SQL execution messages
+message SQLRequest {
+  string request_id = 1;      // UUID for concurrent request tracking
+  string sql_statement = 2;
+  bool is_write = 3;
+  string schema = 4;          // Database schema to use for the query
+}
+
+message SQLResponse {
+  string request_id = 1;      // Match request UUID
+  bool success = 2;
+  string result_json = 3;     // {"columns": [...], "rows": [...]} or {"error": "..."}
+}
+
+// UI event structure
+message UIEvent {
+  string event_type = 1;      // Event type as string (e.g., "plan_proposed", "table_started")
+  string payload_json = 2;    // Event-specific data as JSON
+}
+
+// Rate limit information (sent as trailing metadata or in responses)
+message RateLimitInfo {
+  int32 limit = 1;            // Maximum requests allowed per window
+  int32 remaining = 2;        // Requests remaining in current window
+  double reset_seconds = 3;   // Seconds until limit resets
+}
+
+// No enum needed! Event types are just strings.
+// Examples:
+//   event_type: "plan_proposed"     → payload: {"tables": ["t1", "t2"]}
+//   event_type: "table_started"     → payload: {"name": "t1", "remaining": 5}
+//   event_type: "table_done"        → payload: {"name": "t1"}
+//   event_type: "workflow_completed" → payload: {}
+//   event_type: "agent_waiting_start" → payload: {"text": "loading..."}
+//   event_type: "agent_waiting_stop"  → payload: {}
+//   event_type: "clear_plan_output"   → payload: {}
+//   event_type: "ask_human"          → payload: {"question": "Agree?"}
