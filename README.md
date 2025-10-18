@@ -18,8 +18,22 @@ Seedfast CLI is a command-line tool that generates realistic test data for Postg
 ### Homebrew (macOS and Linux)
 
 ```bash
-brew tap seedfast/tap
+brew tap argon-it/tap
 brew install seedfast
+```
+
+### Download Binary
+
+Download the latest release for your platform from [GitHub Releases](https://github.com/argon-it/seedfast-cli/releases/latest).
+
+### From Source
+
+Requires Go 1.24+:
+
+```bash
+git clone https://github.com/argon-it/seedfast-cli.git
+cd seedfast-cli
+go build -o seedfast
 ```
 
 ## Quick Start
