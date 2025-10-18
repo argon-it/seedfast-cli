@@ -11,3 +11,5 @@ CLAUDE.md
 gocache
 gocache\
 internal\keychain\README.md
+# Added by goreleaser init:
+dist/
