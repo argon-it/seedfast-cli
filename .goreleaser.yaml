@@ -44,6 +44,24 @@ archives:
       - goos: windows
         formats: [zip]
 
+brews:
+  - name: seedfast
+    repository:
+      owner: argon-it
+      name: homebrew-tap
+      token: "{{ .Env.GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/argon-it/seedfast-cli"
+    description: "Database seeding tool for PostgreSQL"
+    license: "MIT"
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    install: |
+      bin.install "seedfast"
+    test: |
+      system "#{bin}/seedfast", "version"
+
 changelog:
   sort: asc
   filters:
@@ -52,8 +70,6 @@ changelog:
       - "^test:"
 
 release:
-  footer: >-
-
-    ---
-
-    Released by [GoReleaser](https://github.com/goreleaser/goreleaser).
+  github:
+    owner: argon-it
+    name: seedfast-cli
