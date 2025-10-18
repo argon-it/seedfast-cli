@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Seedfast
+// Licensed under the MIT License. See LICENSE file in the project root for details.
+
 // Package auth implements persistence for authentication state.
 //
 // This file stores the serialized state in the OS keychain via internal/keychain.

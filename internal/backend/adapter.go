@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Seedfast
+// Licensed under the MIT License. See LICENSE file in the project root for details.
+
 // Package backend provides interfaces and implementations for communicating with the Seedfast backend service.
 // It defines the API contract for authentication, version checking, and other backend operations.
 // The package includes both interface definitions and HTTP-based implementations.

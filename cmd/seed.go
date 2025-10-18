@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Seedfast
+// Licensed under the MIT License. See LICENSE file in the project root for details.
+
 package cmd
 
 import (
@@ -16,7 +19,6 @@ import (
 	"seedfast/cli/internal/auth"
 	bbridge "seedfast/cli/internal/bridge"
 	"seedfast/cli/internal/bridge/model"
-	"seedfast/cli/internal/config"
 	"seedfast/cli/internal/keychain"
 	"seedfast/cli/internal/logging"
 	"seedfast/cli/internal/manifest"
@@ -64,8 +66,7 @@ connection interruptions gracefully.`,
 			return err
 		}
 
-		cfg, _ := config.Load()
-		br := bbridge.New(cfg)
+		br := bbridge.New()
 
 		// Pre-seed check: resolve DSN from env or keychain (not from config)
 		dsn := ""
@@ -607,10 +608,7 @@ connection interruptions gracefully.`,
 		}()
 
 		// Worker pool for tasks
-		concurrency := cfg.Concurrency
-		if concurrency <= 0 {
-			concurrency = 4
-		}
+		concurrency := 4
 
 		// Pretty completion notifier
 		notifyCompletion := func(elapsed time.Duration, tableCount int) {

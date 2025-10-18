@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Seedfast
+// Licensed under the MIT License. See LICENSE file in the project root for details.
+
 // Package keychain provides centralized, thread-safe keychain operations for seedfast.
 // This module manages all interactions with the OS keychain/credential store,
 // providing a unified interface for storing and retrieving sensitive data such as

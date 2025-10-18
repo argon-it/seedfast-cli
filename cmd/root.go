@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Seedfast
+// Licensed under the MIT License. See LICENSE file in the project root for details.
+
 // Package cmd provides the command-line interface for the Seedfast CLI application.
 // It implements various subcommands for database seeding, authentication, and configuration
 // using the Cobra CLI framework. The package handles command parsing, execution, and
@@ -9,13 +12,6 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-)
-
-var (
-	// flagConfigPath specifies the path to the configuration file.
-	flagConfigPath string
-	// flagLogLevel sets the logging level for the application.
-	flagLogLevel string
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -35,11 +31,4 @@ func Execute() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-}
-
-// init initializes the root command with persistent flags.
-// It adds configuration and logging level flags that can be used with all subcommands.
-func init() {
-	rootCmd.PersistentFlags().StringVar(&flagConfigPath, "config", "", "Path to the configuration file")
-	rootCmd.PersistentFlags().StringVar(&flagLogLevel, "log-level", "info", "Set the logging level (debug, info, warn, error)")
 }

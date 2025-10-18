@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Seedfast
+// Licensed under the MIT License. See LICENSE file in the project root for details.
+
 // Package secure provides a legacy compatibility layer for keychain operations.
 // This package now uses the centralized keychain manager from internal/keychain
 // and exists primarily for backward compatibility. For new code, use internal/keychain directly.

@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Seedfast
+// Licensed under the MIT License. See LICENSE file in the project root for details.
+
 // Package auth provides authentication state management and service integration for the CLI.
 // It handles user authentication flows, token management, and session validation
 // through integration with the backend service and secure credential storage.

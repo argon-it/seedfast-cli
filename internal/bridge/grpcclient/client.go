@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Seedfast
+// Licensed under the MIT License. See LICENSE file in the project root for details.
+
 // Package grpcclient provides a gRPC-backed implementation of the Bridge interface.
 // It implements the seeding bridge using gRPC protocol buffers for communication
 // with the backend service. The client handles bidirectional streaming for both

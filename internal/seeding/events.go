@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Seedfast
+// Licensed under the MIT License. See LICENSE file in the project root for details.
+
 // Package seeding defines event structures and rendering utilities used to display
 // seeding progress in the CLI while bridging between the MCP (Model Context Protocol)
 // and the backend service. It provides types for representing different stages of

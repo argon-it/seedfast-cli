@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Seedfast
+// Licensed under the MIT License. See LICENSE file in the project root for details.
+
 // Package errors defines typed errors with categories for user-friendly reporting.
 // It provides a structured approach to error handling with machine-readable error kinds
 // and human-friendly messages. This enables better error categorization, logging,

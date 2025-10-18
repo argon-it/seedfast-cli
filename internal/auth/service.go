@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Seedfast
+// Licensed under the MIT License. See LICENSE file in the project root for details.
+
 // Package auth provides authentication services for the Seedfast CLI.
 // It manages the device authorization flow, token refresh, and session validation.
 // Authentication state is persisted in local XDG config directory, while secrets

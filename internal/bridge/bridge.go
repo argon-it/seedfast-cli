@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Seedfast
+// Licensed under the MIT License. See LICENSE file in the project root for details.
+
 // Package bridge defines interfaces and implementations for bridging between the
 // CLI and backend services. It provides abstractions for different transport
 // mechanisms (gRPC, WebSocket, etc.) while maintaining a consistent interface
@@ -11,7 +14,6 @@ import (
 	"context"
 	"seedfast/cli/internal/bridge/grpcclient"
 	"seedfast/cli/internal/bridge/model"
-	"seedfast/cli/internal/config"
 	"seedfast/cli/internal/seeding"
 )
 
@@ -38,8 +40,8 @@ type Bridge interface {
 	SendSQLResponse(ctx context.Context, resp model.SQLResponse) error
 }
 
-// New creates a new bridge instance based on configuration.
-// It returns a gRPC client bridge by default.
-func New(cfg config.Config) Bridge {
+// New creates a new bridge instance.
+// It returns a gRPC client bridge.
+func New() Bridge {
 	return &grpcclient.Client{}
 }

@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Seedfast
+// Licensed under the MIT License. See LICENSE file in the project root for details.
+
 // Package model defines shared data structures for bridge communication.
 // It provides type definitions for SQL tasks, responses, and other data
 // structures that are exchanged between the CLI and backend services

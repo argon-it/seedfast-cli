@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Seedfast
+// Licensed under the MIT License. See LICENSE file in the project root for details.
+
 // Package logging provides utilities for secure logging and error presentation.
 // It includes functions for masking sensitive information in log messages and
 // formatting errors for user-friendly display while protecting credentials and secrets.

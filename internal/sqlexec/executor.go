@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Seedfast
+// Licensed under the MIT License. See LICENSE file in the project root for details.
+
 // Package sqlexec provides a concurrent SQL execution engine over a pgx connection pool.
 // It handles SQL statement execution, result formatting for database seeding operations.
 // The package supports both read and write operations with automatic transaction management and
