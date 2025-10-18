@@ -5,14 +5,18 @@
 The easiest way to install Seedfast CLI is via Homebrew:
 
 ```bash
-# Add the tap
-brew tap argon-it/tap
-
-# Install seedfast
-brew install seedfast
+# Install (automatically taps the repository)
+brew install argon-it/tap/seedfast
 
 # Verify installation
 seedfast version
+```
+
+Or if you prefer to tap first:
+
+```bash
+brew tap argon-it/tap
+brew install seedfast
 ```
 
 ### Updating
