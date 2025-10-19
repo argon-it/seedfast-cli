@@ -1,10 +1,6 @@
-# This is an example .goreleaser.yml file with some sensible defaults.
-# Make sure to check the documentation at https://goreleaser.com
-
-# The lines below are called `modelines`. See `:help modeline`
-# Feel free to remove those if you don't want/need to use them.
+# GoReleaser configuration for Seedfast CLI
+# Documentation: https://goreleaser.com
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-# vim: set ts=2 sw=2 tw=0 fo=cnqoj
 
 version: 2
 
@@ -17,7 +13,7 @@ builds:
     main: ./main.go
     binary: seedfast
     env:
-      - CGO_ENABLED=0
+      - CGO_ENABLED=0  # Static binary - no C dependencies!
     goos:
       - linux
       - windows
@@ -28,6 +24,11 @@ builds:
     ignore:
       - goos: windows
         goarch: arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
 
 archives:
   - formats: [tar.gz]
@@ -50,17 +51,37 @@ brews:
       owner: argon-it
       name: homebrew-tap
       token: "{{ .Env.GITHUB_TOKEN }}"
+
+    # Path in the tap repository
     directory: Formula
-    homepage: "https://github.com/argon-it/seedfast-cli"
-    description: "Database seeding tool for PostgreSQL"
+
+    # Metadata
+    homepage: "https://seedfa.st"
+    description: "AI-powered PostgreSQL database seeding tool"
     license: "MIT"
+
+    # Commit settings
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
+    commit_msg_template: "chore: update {{ .ProjectName }} to {{ .Tag }}"
+
+    # No runtime dependencies - standalone binary!
+    # This means users DON'T need Xcode/CLT!
+
+    # Installation
     install: |
       bin.install "seedfast"
+
+    # Test that binary works
     test: |
       system "#{bin}/seedfast", "version"
+
+    # Extra information
+    caveats: |
+      Run `seedfast login` to authenticate with the backend service.
+      Then use `seedfast connect` to configure your database connection.
+      Finally, run `seedfast seed` to start seeding your database.
 
 changelog:
   sort: asc
