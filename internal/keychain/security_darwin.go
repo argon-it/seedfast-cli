@@ -136,28 +136,32 @@ func (s *securityBackend) Get(key string) (string, error) {
 	}
 
 	// macOS 26.0 returns hex-encoded data for some values
-	// Decode if it looks like hex AND decodes to readable text (not binary data)
-	if isHexString(result) {
+	// Strategy: Never decode tokens (they're already hex strings), only decode JSON/text
+	shouldDecode := false
+
+	// Don't decode if key name contains "token" - these are hex strings by design
+	if strings.Contains(key, "token") {
+		if verbose {
+			fmt.Printf("[DEBUG] security_darwin: Get() key contains 'token', keeping hex as-is\n")
+		}
+	} else if isHexString(result) {
+		// For non-token keys, decode if it looks like hex
 		decoded, err := hex.DecodeString(result)
 		if err == nil && len(decoded) > 0 {
-			// Only use decoded version if it starts with readable characters
-			// This handles JSON objects, arrays, and text, but keeps tokens as-is
+			// Only decode if it starts with JSON structure character
 			firstByte := decoded[0]
-			isReadable := (firstByte == '{') || // JSON object
-				(firstByte == '[') || // JSON array
-				(firstByte == '"') || // JSON string
-				(firstByte >= 'A' && firstByte <= 'Z') || // uppercase letter
-				(firstByte >= 'a' && firstByte <= 'z') // lowercase letter
+			isJSON := (firstByte == '{') || (firstByte == '[') || (firstByte == '"')
 
-			if isReadable {
+			if isJSON {
 				result = string(decoded)
+				shouldDecode = true
 				if verbose {
-					fmt.Printf("[DEBUG] security_darwin: Get() decoded from hex, new length: %d\n", len(result))
+					fmt.Printf("[DEBUG] security_darwin: Get() decoded from hex (JSON detected), new length: %d\n", len(result))
 					fmt.Printf("[DEBUG] security_darwin: Get() decoded (first 100 chars): %q\n", truncate(result, 100))
 				}
 			} else {
 				if verbose {
-					fmt.Printf("[DEBUG] security_darwin: Get() looks like hex token, keeping as-is (first byte: 0x%02x)\n", firstByte)
+					fmt.Printf("[DEBUG] security_darwin: Get() looks like hex data but not JSON, keeping as-is (first byte: 0x%02x)\n", firstByte)
 				}
 			}
 		}

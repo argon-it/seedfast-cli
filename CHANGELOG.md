@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.6] - 2025-10-19
+
+### Fixed
+- **Critical**: Fix token corruption - never decode keys containing "token"
+- Tokens that start with letter bytes (like 0x62='b') no longer incorrectly decoded
+- `whoami` command now works correctly with proper access token
+
+### Changed
+- Key-name based decoding strategy: skip decode if key contains "token"
+- Only decode non-token hex strings that start with JSON characters ({, [, ")
+- More robust distinction between tokens and hex-encoded JSON data
+
 ## [1.1.5] - 2025-10-19
 
 ### Fixed
