@@ -29,8 +29,16 @@ var (
 
 // Manager provides centralized, thread-safe operations for the OS keychain.
 type Manager struct {
-	mu   sync.RWMutex
-	ring keyring.Keyring
+	mu      sync.RWMutex
+	ring    keyring.Keyring
+	backend keychainBackend
+}
+
+// keychainBackend defines the interface for keychain operations.
+type keychainBackend interface {
+	Set(key, value string) error
+	Get(key string) (string, error)
+	Delete(key string) error
 }
 
 // ServiceName identifies our keychain/credential store namespace.
@@ -46,6 +54,15 @@ const (
 
 // NewManager creates a new keychain manager with the OS keyring initialized.
 func NewManager() (*Manager, error) {
+	// Try native security backend first on macOS
+	if runtime.GOOS == "darwin" {
+		backend, err := newSecurityBackend()
+		if err == nil {
+			return &Manager{backend: backend}, nil
+		}
+		// Fall through to keyring library if security command fails
+	}
+
 	ring, err := openRing()
 	if err != nil {
 		return nil, err
@@ -136,6 +153,22 @@ func (m *Manager) SaveAuthTokens(accessToken, refreshToken string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	// Use native backend if available
+	if m.backend != nil {
+		if accessToken != "" {
+			if err := m.backend.Set(KeyAccessToken, accessToken); err != nil {
+				return err
+			}
+		}
+		if refreshToken != "" {
+			if err := m.backend.Set(KeyRefreshToken, refreshToken); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	// Fallback to keyring library
 	if accessToken != "" {
 		if err := m.ring.Set(keyring.Item{Key: KeyAccessToken, Data: []byte(accessToken)}); err != nil {
 			return err
@@ -155,6 +188,19 @@ func (m *Manager) LoadAccessToken() (string, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
+	// Use native backend if available
+	if m.backend != nil {
+		token, err := m.backend.Get(KeyAccessToken)
+		if err != nil {
+			return "", err
+		}
+		if token == "" {
+			return "", errors.New("empty access token")
+		}
+		return token, nil
+	}
+
+	// Fallback to keyring library
 	it, err := m.ring.Get(KeyAccessToken)
 	if err != nil {
 		return "", err
@@ -170,6 +216,17 @@ func (m *Manager) LoadAccessToken() (string, error) {
 func (m *Manager) LoadRefreshToken() (string, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
+
+	if m.backend != nil {
+		token, err := m.backend.Get(KeyRefreshToken)
+		if err != nil {
+			return "", err
+		}
+		if token == "" {
+			return "", errors.New("empty refresh token")
+		}
+		return token, nil
+	}
 
 	it, err := m.ring.Get(KeyRefreshToken)
 	if err != nil {
@@ -187,6 +244,13 @@ func (m *Manager) ClearAuth() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	if m.backend != nil {
+		_ = m.backend.Delete(KeyAccessToken)
+		_ = m.backend.Delete(KeyRefreshToken)
+		_ = m.backend.Delete(KeyAuthState)
+		return nil
+	}
+
 	_ = m.ring.Remove(KeyAccessToken)
 	_ = m.ring.Remove(KeyRefreshToken)
 	_ = m.ring.Remove(KeyAuthState)
@@ -199,6 +263,10 @@ func (m *Manager) SaveAuthState(data []byte) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	if m.backend != nil {
+		return m.backend.Set(KeyAuthState, string(data))
+	}
+
 	return m.ring.Set(keyring.Item{Key: KeyAuthState, Data: data})
 }
 
@@ -207,6 +275,14 @@ func (m *Manager) SaveAuthState(data []byte) error {
 func (m *Manager) LoadAuthState() ([]byte, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
+
+	if m.backend != nil {
+		data, err := m.backend.Get(KeyAuthState)
+		if err != nil {
+			return nil, err
+		}
+		return []byte(data), nil
+	}
 
 	it, err := m.ring.Get(KeyAuthState)
 	if err != nil {
@@ -221,6 +297,11 @@ func (m *Manager) ClearAuthState() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	if m.backend != nil {
+		_ = m.backend.Delete(KeyAuthState)
+		return nil
+	}
+
 	_ = m.ring.Remove(KeyAuthState)
 	return nil
 }
@@ -231,6 +312,10 @@ func (m *Manager) SaveDBDSN(dsn string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	if m.backend != nil {
+		return m.backend.Set(KeyDBDSN, dsn)
+	}
+
 	return m.ring.Set(keyring.Item{Key: KeyDBDSN, Data: []byte(dsn)})
 }
 
@@ -239,6 +324,10 @@ func (m *Manager) SaveDBDSN(dsn string) error {
 func (m *Manager) LoadDBDSN() (string, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
+
+	if m.backend != nil {
+		return m.backend.Get(KeyDBDSN)
+	}
 
 	it, err := m.ring.Get(KeyDBDSN)
 	if err != nil {
@@ -253,6 +342,11 @@ func (m *Manager) ClearDB() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	if m.backend != nil {
+		_ = m.backend.Delete(KeyDBDSN)
+		return nil
+	}
+
 	_ = m.ring.Remove(KeyDBDSN)
 	return nil
 }
@@ -262,6 +356,14 @@ func (m *Manager) ClearDB() error {
 func (m *Manager) ClearAll() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	if m.backend != nil {
+		_ = m.backend.Delete(KeyAccessToken)
+		_ = m.backend.Delete(KeyRefreshToken)
+		_ = m.backend.Delete(KeyAuthState)
+		_ = m.backend.Delete(KeyDBDSN)
+		return nil
+	}
 
 	_ = m.ring.Remove(KeyAccessToken)
 	_ = m.ring.Remove(KeyRefreshToken)

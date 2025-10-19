@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.9] - 2025-10-19
+
+### Fixed
+- **Critical**: Fix keychain on macOS 26.0 by using native `security` command directly
+- Bypass keyring library which doesn't work on macOS 26.0
+- Use macOS built-in security command for all keychain operations
+
+### Changed
+- macOS now uses `security` command directly (100% compatible with all macOS versions)
+- No external dependencies required - works out of the box
+- Windows continues using keyring library with WinCredBackend
+
 ## [1.0.8] - 2025-10-19
 
 ### Fixed
@@ -123,7 +135,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - pterm for rich terminal output
 - Secure token storage using OS native keychains
 
-[Unreleased]: https://github.com/argon-it/seedfast-cli/compare/v1.0.8...HEAD
+[Unreleased]: https://github.com/argon-it/seedfast-cli/compare/v1.0.9...HEAD
+[1.0.9]: https://github.com/argon-it/seedfast-cli/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/argon-it/seedfast-cli/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/argon-it/seedfast-cli/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/argon-it/seedfast-cli/compare/v1.0.5...v1.0.6
