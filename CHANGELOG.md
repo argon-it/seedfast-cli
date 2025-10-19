@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.3] - 2025-10-19
+
+### Fixed
+- **Critical**: Fix verbose mode not working - now checks SEEDFAST_VERBOSE dynamically
+- Show raw keychain output to diagnose "invalid character 'b' after top-level value" error
+- Verbose logging now actually appears when --verbose flag is used
+
+### Added
+- Display raw keychain data (first 100 chars) in verbose mode
+- Show both raw and trimmed output from security command
+- Hex dump of failed JSON data for debugging
+
 ## [1.1.2] - 2025-10-19
 
 ### Added

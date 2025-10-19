@@ -13,7 +13,18 @@ import (
 	"strings"
 )
 
-var verboseKeychain = os.Getenv("SEEDFAST_VERBOSE") == "1"
+// isVerbose checks if verbose mode is enabled dynamically
+func isVerbose() bool {
+	return os.Getenv("SEEDFAST_VERBOSE") == "1"
+}
+
+// truncate returns first n characters of s, or entire s if shorter
+func truncate(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n] + "..."
+}
 
 // securityBackend implements keychain operations using macOS security command.
 type securityBackend struct{}
@@ -29,13 +40,15 @@ func newSecurityBackend() (*securityBackend, error) {
 
 // Set stores a key-value pair in macOS keychain.
 func (s *securityBackend) Set(key, value string) error {
-	if verboseKeychain {
+	verbose := isVerbose()
+	if verbose {
 		fmt.Printf("[DEBUG] security_darwin: Set() called for key '%s', value length: %d\n", key, len(value))
+		fmt.Printf("[DEBUG] security_darwin: Set() value content (first 100 chars): %q\n", truncate(value, 100))
 	}
 
 	// Delete existing entry first (ignore errors if it doesn't exist)
 	deleteErr := s.Delete(key)
-	if verboseKeychain && deleteErr != nil {
+	if verbose && deleteErr != nil {
 		fmt.Printf("[DEBUG] security_darwin: Delete() returned: %v\n", deleteErr)
 	}
 
@@ -54,13 +67,13 @@ func (s *securityBackend) Set(key, value string) error {
 	if err := cmd.Run(); err != nil {
 		// Include both stderr and the key name in error for debugging
 		errMsg := fmt.Errorf("failed to store '%s' in keychain: %s: %w", key, stderr.String(), err)
-		if verboseKeychain {
+		if verbose {
 			fmt.Printf("[DEBUG] security_darwin: Set() failed: %v\n", errMsg)
 		}
 		return errMsg
 	}
 
-	if verboseKeychain {
+	if verbose {
 		fmt.Printf("[DEBUG] security_darwin: Set() succeeded for key '%s'\n", key)
 	}
 
@@ -69,7 +82,8 @@ func (s *securityBackend) Set(key, value string) error {
 
 // Get retrieves a value from macOS keychain.
 func (s *securityBackend) Get(key string) (string, error) {
-	if verboseKeychain {
+	verbose := isVerbose()
+	if verbose {
 		fmt.Printf("[DEBUG] security_darwin: Get() called for key '%s'\n", key)
 	}
 
@@ -85,21 +99,26 @@ func (s *securityBackend) Get(key string) (string, error) {
 
 	if err := cmd.Run(); err != nil {
 		if strings.Contains(stderr.String(), "could not be found") {
-			if verboseKeychain {
+			if verbose {
 				fmt.Printf("[DEBUG] security_darwin: Get() key not found: '%s'\n", key)
 			}
 			return "", fmt.Errorf("key not found")
 		}
 		errMsg := fmt.Errorf("failed to retrieve from keychain: %s: %w", stderr.String(), err)
-		if verboseKeychain {
+		if verbose {
 			fmt.Printf("[DEBUG] security_darwin: Get() failed: %v\n", errMsg)
 		}
 		return "", errMsg
 	}
 
-	result := strings.TrimSpace(stdout.String())
-	if verboseKeychain {
-		fmt.Printf("[DEBUG] security_darwin: Get() succeeded for key '%s', value length: %d\n", key, len(result))
+	rawOutput := stdout.String()
+	result := strings.TrimSpace(rawOutput)
+
+	if verbose {
+		fmt.Printf("[DEBUG] security_darwin: Get() raw output length: %d\n", len(rawOutput))
+		fmt.Printf("[DEBUG] security_darwin: Get() raw output (first 100 chars): %q\n", truncate(rawOutput, 100))
+		fmt.Printf("[DEBUG] security_darwin: Get() trimmed length: %d\n", len(result))
+		fmt.Printf("[DEBUG] security_darwin: Get() trimmed (first 100 chars): %q\n", truncate(result, 100))
 	}
 
 	return result, nil
