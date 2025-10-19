@@ -87,18 +87,31 @@ func MustGetManager() *Manager {
 	return manager
 }
 
-// openRing opens the OS keyring using available backends.
-// Lets the library automatically select the best available backend for the platform.
+// openRing opens the OS keyring using native platform backends only.
+// Forces use of macOS Keychain or Windows Credential Manager - no file fallback.
 func openRing() (keyring.Keyring, error) {
 	// Only support darwin/windows platforms
 	if runtime.GOOS != "darwin" && runtime.GOOS != "windows" {
 		return nil, errors.New("secure storage not supported on this OS (macOS/Windows only)")
 	}
 
+	// Use platform-specific native backends only
+	var allowedBackends []keyring.BackendType
+	if runtime.GOOS == "darwin" {
+		// Try macOS Keychain first, then pass (password store) as fallback
+		// Pass requires 'pass' utility installed: brew install pass
+		allowedBackends = []keyring.BackendType{
+			keyring.KeychainBackend,
+			keyring.PassBackend,
+		}
+	} else if runtime.GOOS == "windows" {
+		allowedBackends = []keyring.BackendType{keyring.WinCredBackend}
+	}
+
 	cfg := keyring.Config{
-		ServiceName: ServiceName,
-		// Let keyring library choose the best available backend
-		// This allows it to adapt to newer macOS versions
+		ServiceName:     ServiceName,
+		AllowedBackends: allowedBackends,
+		PassPrefix:      ServiceName,
 	}
 
 	// Hint prefixes where supported to minimize namespace collisions
@@ -106,7 +119,15 @@ func openRing() (keyring.Keyring, error) {
 		cfg.WinCredPrefix = ServiceName
 	}
 
-	return keyring.Open(cfg)
+	ring, err := keyring.Open(cfg)
+	if err != nil {
+		if runtime.GOOS == "darwin" {
+			return nil, errors.New("macOS Keychain unavailable. On macOS 26.0+, install 'pass': brew install pass gnupg && gpg --generate-key && pass init <gpg-key-id>")
+		}
+		return nil, err
+	}
+
+	return ring, nil
 }
 
 // SaveAuthTokens stores access and refresh tokens in the OS keychain.

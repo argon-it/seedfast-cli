@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.8] - 2025-10-19
+
+### Fixed
+- Add PassBackend support for macOS 26.0 where native Keychain API is unavailable
+- Provide clear error message with installation instructions for 'pass' utility
+- Fix "No directory provided for file keyring" error on macOS 26.0
+
+### Added
+- Support for 'pass' (password store) as secure alternative on macOS 26.0+
+- Helpful error message: install pass with `brew install pass gnupg`
+
+### Changed
+- macOS backend priority: Keychain first, then pass (both are secure)
+- No file-based storage fallback - only encrypted backends
+
 ## [1.0.7] - 2025-10-19
 
 ### Fixed
@@ -108,7 +123,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - pterm for rich terminal output
 - Secure token storage using OS native keychains
 
-[Unreleased]: https://github.com/argon-it/seedfast-cli/compare/v1.0.7...HEAD
+[Unreleased]: https://github.com/argon-it/seedfast-cli/compare/v1.0.8...HEAD
+[1.0.8]: https://github.com/argon-it/seedfast-cli/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/argon-it/seedfast-cli/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/argon-it/seedfast-cli/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/argon-it/seedfast-cli/compare/v1.0.4...v1.0.5
