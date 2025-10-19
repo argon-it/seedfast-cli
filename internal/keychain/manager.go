@@ -23,7 +23,8 @@ import (
 // Global keychain manager instance
 var (
 	globalManager *Manager
-	once          sync.Once
+	globalError   error
+	mu            sync.Mutex
 )
 
 // Manager provides centralized, thread-safe operations for the OS keychain.
@@ -57,14 +58,22 @@ func NewManager() (*Manager, error) {
 
 // GetManager returns the global keychain manager instance.
 // If not initialized, it will be created on first call.
+// If initialization fails, it will retry on subsequent calls.
 func GetManager() (*Manager, error) {
-	var err error
-	once.Do(func() {
-		globalManager, err = NewManager()
-	})
-	if err != nil {
-		return nil, err
+	mu.Lock()
+	defer mu.Unlock()
+
+	// If already initialized successfully, return it
+	if globalManager != nil {
+		return globalManager, nil
 	}
+
+	// If previous initialization failed, retry
+	globalManager, globalError = NewManager()
+	if globalError != nil {
+		return nil, globalError
+	}
+
 	return globalManager, nil
 }
 
