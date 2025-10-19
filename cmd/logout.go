@@ -40,7 +40,9 @@ This command removes:
 		if err := svc.Logout(cmd.Context()); err != nil {
 			return err
 		}
-		_ = keychain.MustGetManager().ClearDB()
+		if km, err := keychain.GetManager(); err == nil {
+			_ = km.ClearDB()
+		}
 		fmt.Println("All credentials and tokens have been removed")
 		return nil
 	},

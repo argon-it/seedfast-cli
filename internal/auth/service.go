@@ -98,7 +98,7 @@ func (s *Service) WhoAmI(ctx context.Context) (string, bool, error) {
 		if meErr != nil && meErr.Error() == "unauthorized" {
 			if refreshed, _ := s.RefreshAccessToken(ctx); refreshed {
 				// Retry with new token
-				if newToken, err := keychain.MustGetManager().LoadAccessToken(); err == nil && newToken != "" {
+				if newToken, err := km.LoadAccessToken(); err == nil && newToken != "" {
 					if userData, err := s.be.GetMe(ctx, newToken); err == nil && userData != nil {
 						if uid, ok := userData["user_id"].(string); ok && uid != "" {
 							return uid, true, nil
@@ -137,10 +137,14 @@ func (s *Service) WhoAmI(ctx context.Context) (string, bool, error) {
 
 // Logout performs remote logout (best-effort) and clears local credentials/state.
 func (s *Service) Logout(ctx context.Context) error {
-	if token, err := keychain.MustGetManager().LoadAccessToken(); err == nil && token != "" {
+	km, err := keychain.GetManager()
+	if err != nil {
+		return err
+	}
+	if token, err := km.LoadAccessToken(); err == nil && token != "" {
 		_ = s.be.Logout(ctx, token)
 	}
-	if err := keychain.MustGetManager().ClearAuth(); err != nil {
+	if err := km.ClearAuth(); err != nil {
 		return err
 	}
 	if err := Clear(); err != nil {
@@ -151,7 +155,11 @@ func (s *Service) Logout(ctx context.Context) error {
 
 // ResetLocalAuth clears only local credentials/state (no remote calls).
 func (s *Service) ResetLocalAuth() error {
-	if err := keychain.MustGetManager().ClearAuth(); err != nil {
+	km, err := keychain.GetManager()
+	if err != nil {
+		return err
+	}
+	if err := km.ClearAuth(); err != nil {
 		return err
 	}
 	if err := Clear(); err != nil {
@@ -164,7 +172,10 @@ func (s *Service) ResetLocalAuth() error {
 // If successful, updates the stored tokens in the keychain.
 // Returns true if refresh was successful, false otherwise.
 func (s *Service) RefreshAccessToken(ctx context.Context) (bool, error) {
-	km := keychain.MustGetManager()
+	km, err := keychain.GetManager()
+	if err != nil {
+		return false, err
+	}
 
 	// Load refresh token
 	refreshToken, err := km.LoadRefreshToken()
@@ -197,7 +208,11 @@ func (s *Service) RefreshAccessToken(ctx context.Context) (bool, error) {
 // Just returns the stored token without validation or refresh.
 // For automatic token refresh, use GetValidAccessToken instead.
 func (s *Service) GetAccessToken(ctx context.Context) (string, error) {
-	token, err := keychain.MustGetManager().LoadAccessToken()
+	km, err := keychain.GetManager()
+	if err != nil {
+		return "", err
+	}
+	token, err := km.LoadAccessToken()
 	if err != nil {
 		return "", err
 	}
@@ -207,7 +222,10 @@ func (s *Service) GetAccessToken(ctx context.Context) (string, error) {
 // GetValidAccessToken retrieves a valid access token, automatically refreshing if needed.
 // If both access and refresh tokens are expired, clears auth state and returns an error.
 func (s *Service) GetValidAccessToken(ctx context.Context) (string, error) {
-	km := keychain.MustGetManager()
+	km, err := keychain.GetManager()
+	if err != nil {
+		return "", err
+	}
 	token, err := km.LoadAccessToken()
 	if err != nil {
 		return "", err
@@ -237,7 +255,11 @@ func (s *Service) GetValidAccessToken(ctx context.Context) (string, error) {
 // WarmCache pre-fetches user data from /api/cli/me to populate the cache.
 // This is typically called right after successful login to enable offline whoami.
 func (s *Service) WarmCache(ctx context.Context) error {
-	token, err := keychain.MustGetManager().LoadAccessToken()
+	km, err := keychain.GetManager()
+	if err != nil {
+		return err
+	}
+	token, err := km.LoadAccessToken()
 	if err != nil || token == "" {
 		return err
 	}
@@ -249,7 +271,11 @@ func (s *Service) WarmCache(ctx context.Context) error {
 // GetUserData retrieves full user data from the /api/cli/me endpoint.
 // Returns a map with user fields like email, user_id, etc.
 func (s *Service) GetUserData(ctx context.Context) (map[string]any, error) {
-	token, err := keychain.MustGetManager().LoadAccessToken()
+	km, err := keychain.GetManager()
+	if err != nil {
+		return nil, err
+	}
+	token, err := km.LoadAccessToken()
 	if err != nil || token == "" {
 		return nil, err
 	}

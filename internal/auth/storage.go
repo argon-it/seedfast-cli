@@ -21,7 +21,11 @@ type State struct {
 // Load reads the auth state from the keychain. Missing state yields zero value.
 func Load() (State, error) {
 	var s State
-	data, err := keychain.MustGetManager().LoadAuthState()
+	km, err := keychain.GetManager()
+	if err != nil {
+		return s, err
+	}
+	data, err := km.LoadAuthState()
 	if err != nil {
 		return s, err
 	}
@@ -40,8 +44,18 @@ func Save(s State) error {
 	if err != nil {
 		return err
 	}
-	return keychain.MustGetManager().SaveAuthState(b)
+	km, err := keychain.GetManager()
+	if err != nil {
+		return err
+	}
+	return km.SaveAuthState(b)
 }
 
 // Clear removes the auth state from the keychain.
-func Clear() error { return keychain.MustGetManager().ClearAuthState() }
+func Clear() error {
+	km, err := keychain.GetManager()
+	if err != nil {
+		return err
+	}
+	return km.ClearAuthState()
+}

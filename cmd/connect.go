@@ -110,14 +110,22 @@ Example DSN format: postgres://user:password@host:5432/database?sslmode=disable`
 
 		// Stop spinner and overwrite with success message
 		stopSpinner()
-		fmt.Println("✅ Database connection verified and saved!")
-		fmt.Println("   You're ready to run 'seedfast seed'")
 
 		// Save DSN securely in the OS keychain
-		if err := keychain.MustGetManager().SaveDBDSN(dsn); err != nil {
+		km, err := keychain.GetManager()
+		if err != nil {
+			fmt.Println("❌ Secure storage is not available on this system.")
+			fmt.Println("   Keychain is only supported on macOS and Windows.")
+			fmt.Println("   Connection verified but not saved.")
+			return err
+		}
+		if err := km.SaveDBDSN(dsn); err != nil {
 			fmt.Println("❌ Failed to save connection details securely.")
 			return err
 		}
+
+		fmt.Println("✅ Database connection verified and saved!")
+		fmt.Println("   You're ready to run 'seedfast seed'")
 		return nil
 	},
 }

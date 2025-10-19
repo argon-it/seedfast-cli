@@ -76,8 +76,10 @@ connection interruptions gracefully.`,
 			dsn = strings.TrimSpace(env)
 		}
 		if strings.TrimSpace(dsn) == "" {
-			if v, err := keychain.MustGetManager().LoadDBDSN(); err == nil && strings.TrimSpace(v) != "" {
-				dsn = strings.TrimSpace(v)
+			if km, err := keychain.GetManager(); err == nil {
+				if v, err := km.LoadDBDSN(); err == nil && strings.TrimSpace(v) != "" {
+					dsn = strings.TrimSpace(v)
+				}
 			}
 		}
 		if strings.TrimSpace(dsn) == "" {
@@ -91,8 +93,10 @@ connection interruptions gracefully.`,
 
 		// Validate access token and resolve user before connecting
 		token := ""
-		if t, err := keychain.MustGetManager().LoadAccessToken(); err == nil {
-			token = t
+		if km, err := keychain.GetManager(); err == nil {
+			if t, err := km.LoadAccessToken(); err == nil {
+				token = t
+			}
 		}
 		if token == "" {
 			return errors.New("not logged in; run 'seedfast login' first")

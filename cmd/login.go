@@ -108,7 +108,9 @@ If already logged in with valid credentials, it will skip the authentication flo
 			case <-ctx.Done():
 				close(stopSpinner)
 				spinnerWG.Wait()
-				_ = keychain.MustGetManager().ClearAuth()
+				if km, err := keychain.GetManager(); err == nil {
+					_ = km.ClearAuth()
+				}
 				_ = auth.Clear()
 				return fmt.Errorf("login timed out; cleaned up")
 			case <-ticker.C:

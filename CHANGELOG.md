@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.5] - 2025-10-19
+
+### Fixed
+- **Critical**: Replace all `MustGetManager()` calls with graceful `GetManager()` error handling
+- Fix panic "Specified keyring backend not available" on unsupported platforms (e.g., Linux, MSYS)
+- Add proper error handling in all 17 keychain access points across 8 files:
+  - `cmd/login.go`: Handle keychain errors during login timeout cleanup
+  - `cmd/connect.go`: Display user-friendly message when keychain unavailable
+  - `cmd/logout.go`: Gracefully handle keychain errors during logout
+  - `cmd/seed.go`: Handle keychain errors when loading DSN and access token
+  - `internal/auth/storage.go`: Add error handling for Load/Save/Clear operations
+  - `internal/auth/service.go`: Fix 11 keychain calls in auth service methods
+- Improve error messages for unsupported platforms (Linux, MSYS/Git Bash on Windows)
+- Preserve `MustGetManager()` function for backward compatibility (no longer used internally)
+
+### Changed
+- All keychain operations now return errors instead of panicking
+- Better UX: informative error messages instead of crashes on unsupported systems
+
 ## [1.0.4] - 2025-10-19
 
 ### Fixed
@@ -62,7 +81,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - pterm for rich terminal output
 - Secure token storage using OS native keychains
 
-[Unreleased]: https://github.com/argon-it/seedfast-cli/compare/v1.0.4...HEAD
+[Unreleased]: https://github.com/argon-it/seedfast-cli/compare/v1.0.5...HEAD
+[1.0.5]: https://github.com/argon-it/seedfast-cli/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/argon-it/seedfast-cli/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/argon-it/seedfast-cli/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/argon-it/seedfast-cli/compare/v1.0.1...v1.0.2
