@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2025-10-19
+
+### Fixed
+- Add `-trimpath` flag to remove absolute build paths from binaries
+- Fixes panic with keychain on macOS when using bottles from GitHub Releases
+
 ## [1.0.0] - 2025-10-19
 
 ### Added
@@ -36,5 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - pterm for rich terminal output
 - Secure token storage using OS native keychains
 
-[Unreleased]: https://github.com/argon-it/seedfast-cli/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/argon-it/seedfast-cli/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/argon-it/seedfast-cli/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/argon-it/seedfast-cli/releases/tag/v1.0.0
