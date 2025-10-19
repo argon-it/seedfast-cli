@@ -137,7 +137,6 @@ func (s *securityBackend) Get(key string) (string, error) {
 
 	// macOS 26.0 returns hex-encoded data for some values
 	// Strategy: Never decode tokens (they're already hex strings), only decode JSON/text
-	shouldDecode := false
 
 	// Don't decode if key name contains "token" - these are hex strings by design
 	if strings.Contains(key, "token") {
@@ -154,7 +153,6 @@ func (s *securityBackend) Get(key string) (string, error) {
 
 			if isJSON {
 				result = string(decoded)
-				shouldDecode = true
 				if verbose {
 					fmt.Printf("[DEBUG] security_darwin: Get() decoded from hex (JSON detected), new length: %d\n", len(result))
 					fmt.Printf("[DEBUG] security_darwin: Get() decoded (first 100 chars): %q\n", truncate(result, 100))
