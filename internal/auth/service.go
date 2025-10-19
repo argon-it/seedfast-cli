@@ -42,7 +42,14 @@ func (s *Service) PollLogin(ctx context.Context, deviceID string) (string, bool,
 	if access == "" {
 		return "", false, nil
 	}
-	if err := keychain.MustGetManager().SaveAuthTokens(access, refresh); err != nil {
+
+	// Get keychain manager - this will initialize it if needed
+	km, err := keychain.GetManager()
+	if err != nil {
+		return "", false, err
+	}
+
+	if err := km.SaveAuthTokens(access, refresh); err != nil {
 		return "", false, err
 	}
 	userID := ""
@@ -62,7 +69,13 @@ func (s *Service) PollLogin(ctx context.Context, deviceID string) (string, bool,
 // to CheckDevice, and finally local state if offline.
 // If token is expired, attempts to refresh. If refresh fails, logs out the user.
 func (s *Service) WhoAmI(ctx context.Context) (string, bool, error) {
-	token, err := keychain.MustGetManager().LoadAccessToken()
+	// Try to get keychain manager - if it fails, user is not logged in
+	km, err := keychain.GetManager()
+	if err != nil {
+		return "", false, nil // Keychain unavailable = not logged in
+	}
+
+	token, err := km.LoadAccessToken()
 	if err == nil && token != "" {
 		// Try new /api/cli/me endpoint first (supports caching)
 		userData, meErr := s.be.GetMe(ctx, token)

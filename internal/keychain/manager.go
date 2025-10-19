@@ -79,46 +79,21 @@ func MustGetManager() *Manager {
 }
 
 // openRing opens the OS keyring using a restricted set of backends.
-// On macOS/Windows, tries native keychain first, then falls back to encrypted file storage.
+// Only macOS Keychain and Windows Credential Manager are allowed.
 func openRing() (keyring.Keyring, error) {
 	// Restrict to darwin/windows explicitly; return an error elsewhere.
 	if runtime.GOOS != "darwin" && runtime.GOOS != "windows" {
 		return nil, errors.New("secure storage not supported on this OS (macOS/Windows only)")
 	}
-
-	// Try native keychain first
 	cfg := keyring.Config{
 		ServiceName:     ServiceName,
 		AllowedBackends: []keyring.BackendType{keyring.KeychainBackend, keyring.WinCredBackend},
 	}
+	// Hint prefixes where supported to minimize namespace collisions
 	if runtime.GOOS == "windows" {
 		cfg.WinCredPrefix = ServiceName
 	}
-
-	ring, err := keyring.Open(cfg)
-	if err == nil {
-		return ring, nil
-	}
-
-	// Fallback to encrypted file storage if native keychain unavailable
-	// (e.g., on macOS beta versions or sandboxed environments)
-	fallbackCfg := keyring.Config{
-		ServiceName:              ServiceName,
-		AllowedBackends:          []keyring.BackendType{keyring.FileBackend},
-		FileDir:                  "~/.config/seedfast",
-		FilePasswordFunc:         filePassword,
-		KeychainTrustApplication: true,
-	}
-
-	return keyring.Open(fallbackCfg)
-}
-
-// filePassword returns a password for encrypted file storage.
-// Uses a deterministic password based on machine ID for simplicity.
-func filePassword(prompt string) (string, error) {
-	// In production, you might want to prompt the user or use a more secure method.
-	// For now, use a simple approach that works across restarts.
-	return "seedfast-local-keyring", nil
+	return keyring.Open(cfg)
 }
 
 // SaveAuthTokens stores access and refresh tokens in the OS keychain.
