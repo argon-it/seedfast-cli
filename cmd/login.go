@@ -105,7 +105,20 @@ If already logged in with valid credentials, it will skip the authentication flo
 			fmt.Printf("\n[DEBUG] Starting polling for device ID: %s\n", deviceID)
 		}
 		if account, ok, err := svc.PollLogin(ctx, deviceID); err == nil && ok {
-			_ = auth.Save(auth.State{LoggedIn: true, Account: account})
+			if verboseLogin {
+				fmt.Printf("\n[DEBUG] Login successful, saving state for account: %s\n", account)
+			}
+
+			if err := auth.Save(auth.State{LoggedIn: true, Account: account}); err != nil {
+				close(stopSpinner)
+				spinnerWG.Wait()
+				return fmt.Errorf("failed to save auth state: %w", err)
+			}
+
+			if verboseLogin {
+				fmt.Printf("[DEBUG] Auth state saved successfully\n")
+			}
+
 			// Warm the cache for offline whoami support
 			_ = svc.WarmCache(ctx)
 			close(stopSpinner)
@@ -145,7 +158,21 @@ If already logged in with valid credentials, it will skip the authentication flo
 					}
 					continue
 				}
-				_ = auth.Save(auth.State{LoggedIn: true, Account: account})
+
+				if verboseLogin {
+					fmt.Printf("\n[DEBUG] Login successful, saving state for account: %s\n", account)
+				}
+
+				if err := auth.Save(auth.State{LoggedIn: true, Account: account}); err != nil {
+					close(stopSpinner)
+					spinnerWG.Wait()
+					return fmt.Errorf("failed to save auth state: %w", err)
+				}
+
+				if verboseLogin {
+					fmt.Printf("[DEBUG] Auth state saved successfully\n")
+				}
+
 				// Warm the cache for offline whoami support
 				_ = svc.WarmCache(ctx)
 				close(stopSpinner)

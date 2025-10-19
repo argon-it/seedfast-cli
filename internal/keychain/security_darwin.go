@@ -30,6 +30,7 @@ func (s *securityBackend) Set(key, value string) error {
 	_ = s.Delete(key)
 
 	// Add new entry
+	// Use -U flag to update if exists
 	cmd := exec.Command("security", "add-generic-password",
 		"-a", ServiceName,        // account name
 		"-s", key,                 // service name
@@ -41,7 +42,8 @@ func (s *securityBackend) Set(key, value string) error {
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to store in keychain: %s: %w", stderr.String(), err)
+		// Include both stderr and the key name in error for debugging
+		return fmt.Errorf("failed to store '%s' in keychain: %s: %w", key, stderr.String(), err)
 	}
 
 	return nil

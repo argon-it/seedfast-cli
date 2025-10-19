@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2025-10-19
+
+### Fixed
+- Add error checking when saving auth state after login
+- Show detailed error message if auth state save fails
+- Add verbose logging for debugging auth state persistence issues
+- Improve error messages in security_darwin.go to show which key failed
+
+### Changed
+- Login command now stops with error if auth.Save() fails (was silently ignored)
+- Verbose mode (`--verbose`) shows auth state save progress for debugging
+
 ## [1.1.0] - 2025-10-19
 
 ### Fixed
@@ -147,7 +159,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - pterm for rich terminal output
 - Secure token storage using OS native keychains
 
-[Unreleased]: https://github.com/argon-it/seedfast-cli/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/argon-it/seedfast-cli/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/argon-it/seedfast-cli/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/argon-it/seedfast-cli/compare/v1.0.9...v1.1.0
 [1.0.9]: https://github.com/argon-it/seedfast-cli/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/argon-it/seedfast-cli/compare/v1.0.7...v1.0.8
