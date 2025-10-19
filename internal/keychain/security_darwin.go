@@ -7,6 +7,7 @@ package keychain
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"os/exec"
@@ -24,6 +25,19 @@ func truncate(s string, n int) string {
 		return s
 	}
 	return s[:n] + "..."
+}
+
+// isHexString checks if a string contains only hex characters (0-9, a-f, A-F)
+func isHexString(s string) bool {
+	if len(s) == 0 || len(s)%2 != 0 {
+		return false
+	}
+	for _, c := range s {
+		if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+			return false
+		}
+	}
+	return true
 }
 
 // securityBackend implements keychain operations using macOS security command.
@@ -119,6 +133,22 @@ func (s *securityBackend) Get(key string) (string, error) {
 		fmt.Printf("[DEBUG] security_darwin: Get() raw output (first 100 chars): %q\n", truncate(rawOutput, 100))
 		fmt.Printf("[DEBUG] security_darwin: Get() trimmed length: %d\n", len(result))
 		fmt.Printf("[DEBUG] security_darwin: Get() trimmed (first 100 chars): %q\n", truncate(result, 100))
+	}
+
+	// macOS 26.0 returns hex-encoded data, decode if it looks like hex
+	if isHexString(result) {
+		decoded, err := hex.DecodeString(result)
+		if err != nil {
+			if verbose {
+				fmt.Printf("[DEBUG] security_darwin: Get() hex decode failed: %v\n", err)
+			}
+			return "", fmt.Errorf("failed to decode hex output: %w", err)
+		}
+		result = string(decoded)
+		if verbose {
+			fmt.Printf("[DEBUG] security_darwin: Get() decoded from hex, new length: %d\n", len(result))
+			fmt.Printf("[DEBUG] security_darwin: Get() decoded (first 100 chars): %q\n", truncate(result, 100))
+		}
 	}
 
 	return result, nil

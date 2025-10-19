@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.4] - 2025-10-19
+
+### Fixed
+- **Critical**: Fix auth state persistence on macOS 26.0 - decode hex-encoded keychain data
+- macOS 26.0's `security find-generic-password -w` returns hex instead of plain text
+- Auth state now correctly loads after login on macOS 26.0
+
+### Added
+- Automatic hex decoding for keychain data on macOS
+- `isHexString()` helper to detect hex-encoded strings
+- Verbose logging shows both hex and decoded values
+
 ## [1.1.3] - 2025-10-19
 
 ### Fixed
