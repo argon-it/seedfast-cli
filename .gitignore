@@ -4,6 +4,7 @@ recursive_tables.sql
 reset_and_run.sh
 .env
 seedfast.exe
+demo_tables.sql
 .idea\
 .idea
 .claude

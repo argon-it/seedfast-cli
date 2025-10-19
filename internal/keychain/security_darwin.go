@@ -135,19 +135,31 @@ func (s *securityBackend) Get(key string) (string, error) {
 		fmt.Printf("[DEBUG] security_darwin: Get() trimmed (first 100 chars): %q\n", truncate(result, 100))
 	}
 
-	// macOS 26.0 returns hex-encoded data, decode if it looks like hex
+	// macOS 26.0 returns hex-encoded data for some values
+	// Decode if it looks like hex AND decodes to readable text (not binary data)
 	if isHexString(result) {
 		decoded, err := hex.DecodeString(result)
-		if err != nil {
-			if verbose {
-				fmt.Printf("[DEBUG] security_darwin: Get() hex decode failed: %v\n", err)
+		if err == nil && len(decoded) > 0 {
+			// Only use decoded version if it starts with readable characters
+			// This handles JSON objects, arrays, and text, but keeps tokens as-is
+			firstByte := decoded[0]
+			isReadable := (firstByte == '{') || // JSON object
+				(firstByte == '[') || // JSON array
+				(firstByte == '"') || // JSON string
+				(firstByte >= 'A' && firstByte <= 'Z') || // uppercase letter
+				(firstByte >= 'a' && firstByte <= 'z') // lowercase letter
+
+			if isReadable {
+				result = string(decoded)
+				if verbose {
+					fmt.Printf("[DEBUG] security_darwin: Get() decoded from hex, new length: %d\n", len(result))
+					fmt.Printf("[DEBUG] security_darwin: Get() decoded (first 100 chars): %q\n", truncate(result, 100))
+				}
+			} else {
+				if verbose {
+					fmt.Printf("[DEBUG] security_darwin: Get() looks like hex token, keeping as-is (first byte: 0x%02x)\n", firstByte)
+				}
 			}
-			return "", fmt.Errorf("failed to decode hex output: %w", err)
-		}
-		result = string(decoded)
-		if verbose {
-			fmt.Printf("[DEBUG] security_darwin: Get() decoded from hex, new length: %d\n", len(result))
-			fmt.Printf("[DEBUG] security_darwin: Get() decoded (first 100 chars): %q\n", truncate(result, 100))
 		}
 	}
 

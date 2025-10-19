@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.5] - 2025-10-19
+
+### Fixed
+- **Critical**: Fix access tokens being corrupted by hex decoding on macOS 26.0
+- Smart hex decoding - only decode if result starts with readable character (JSON, text)
+- Access tokens and other hex strings now preserved as-is
+- `whoami` command now correctly fetches user email from backend
+
+### Changed
+- Hex decoding only applies to JSON objects/arrays and text strings
+- Tokens remain in their original hex string format
+
 ## [1.1.4] - 2025-10-19
 
 ### Fixed
