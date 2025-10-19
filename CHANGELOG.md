@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-10-19
+
+### Fixed
+- **Critical**: Fix auth state not persisting after login on macOS 26.0
+- Handle "key not found" errors gracefully in LoadAuthState (treat as empty, not error)
+- Fix `whoami` and `connect` commands showing "not logged in" after successful login
+- Properly distinguish between "key doesn't exist yet" vs "real keychain error"
+
+### Changed
+- LoadAuthState returns nil (no data) instead of error when key doesn't exist
+- Better error handling for first-run scenarios
+
 ## [1.0.9] - 2025-10-19
 
 ### Fixed
@@ -135,7 +147,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - pterm for rich terminal output
 - Secure token storage using OS native keychains
 
-[Unreleased]: https://github.com/argon-it/seedfast-cli/compare/v1.0.9...HEAD
+[Unreleased]: https://github.com/argon-it/seedfast-cli/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/argon-it/seedfast-cli/compare/v1.0.9...v1.1.0
 [1.0.9]: https://github.com/argon-it/seedfast-cli/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/argon-it/seedfast-cli/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/argon-it/seedfast-cli/compare/v1.0.6...v1.0.7

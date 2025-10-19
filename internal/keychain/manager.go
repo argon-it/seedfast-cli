@@ -15,6 +15,7 @@ package keychain
 import (
 	"errors"
 	"runtime"
+	"strings"
 	"sync"
 
 	"github.com/99designs/keyring"
@@ -272,6 +273,7 @@ func (m *Manager) SaveAuthState(data []byte) error {
 
 // LoadAuthState retrieves serialized auth state from the keychain.
 // This method is thread-safe.
+// Returns empty data (nil) if the key doesn't exist (first run or logged out).
 func (m *Manager) LoadAuthState() ([]byte, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -279,6 +281,10 @@ func (m *Manager) LoadAuthState() ([]byte, error) {
 	if m.backend != nil {
 		data, err := m.backend.Get(KeyAuthState)
 		if err != nil {
+			// "key not found" is normal - just means no state saved yet
+			if strings.Contains(err.Error(), "key not found") || strings.Contains(err.Error(), "could not be found") {
+				return nil, nil
+			}
 			return nil, err
 		}
 		return []byte(data), nil
@@ -286,6 +292,9 @@ func (m *Manager) LoadAuthState() ([]byte, error) {
 
 	it, err := m.ring.Get(KeyAuthState)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return it.Data, nil
