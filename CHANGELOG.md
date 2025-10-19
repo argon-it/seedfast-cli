@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.6] - 2025-10-19
+
+### Fixed
+- Fix infinite polling loop when authentication errors occur during login
+- Stop silently ignoring errors in `PollLogin` during device authorization
+- Display authentication errors immediately instead of continuing to poll
+
+### Added
+- Add `--verbose` flag to `login` command for debugging authentication issues
+- Show device ID, poll interval, and polling status in verbose mode
+- Better error messages when authentication fails
+
+### Changed
+- Login command now fails fast when errors occur instead of infinite polling
+- Improved debugging experience for authentication troubleshooting
+
 ## [1.0.5] - 2025-10-19
 
 ### Fixed
@@ -81,7 +97,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - pterm for rich terminal output
 - Secure token storage using OS native keychains
 
-[Unreleased]: https://github.com/argon-it/seedfast-cli/compare/v1.0.5...HEAD
+[Unreleased]: https://github.com/argon-it/seedfast-cli/compare/v1.0.6...HEAD
+[1.0.6]: https://github.com/argon-it/seedfast-cli/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/argon-it/seedfast-cli/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/argon-it/seedfast-cli/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/argon-it/seedfast-cli/compare/v1.0.2...v1.0.3

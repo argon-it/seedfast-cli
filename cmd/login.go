@@ -23,6 +23,10 @@ import (
 // It initiates a browser-based authentication flow where the user completes login
 // through a web interface, then polls the backend to verify completion.
 // For the MVP implementation, it uses a magic link flow with polling verification.
+var (
+	verboseLogin bool
+)
+
 var loginCmd = &cobra.Command{
 	Use:     "login",
 	Aliases: []string{"auth"},
@@ -55,6 +59,10 @@ If already logged in with valid credentials, it will skip the authentication flo
 		authURL, deviceID, pollEvery, err := svc.StartLogin(ctx)
 		if err != nil {
 			return err
+		}
+		if verboseLogin {
+			fmt.Printf("[DEBUG] Device ID: %s\n", deviceID)
+			fmt.Printf("[DEBUG] Poll interval: %d seconds\n", pollEvery)
 		}
 		fmt.Println("Open this link to complete login:")
 		fmt.Printf("%s\n\n", authURL)
@@ -93,6 +101,9 @@ If already logged in with valid credentials, it will skip the authentication flo
 		defer ticker.Stop()
 
 		// Immediate attempt without noisy per-attempt logging
+		if verboseLogin {
+			fmt.Printf("\n[DEBUG] Starting polling for device ID: %s\n", deviceID)
+		}
 		if account, ok, err := svc.PollLogin(ctx, deviceID); err == nil && ok {
 			_ = auth.Save(auth.State{LoggedIn: true, Account: account})
 			// Warm the cache for offline whoami support
@@ -102,6 +113,11 @@ If already logged in with valid credentials, it will skip the authentication flo
 			// Show friendly greeting with email
 			showLoginGreeting(ctx, svc)
 			return nil
+		} else if err != nil {
+			// If there's an error on first attempt, stop and report it
+			close(stopSpinner)
+			spinnerWG.Wait()
+			return fmt.Errorf("authentication failed: %w", err)
 		}
 		for {
 			select {
@@ -116,9 +132,17 @@ If already logged in with valid credentials, it will skip the authentication flo
 			case <-ticker.C:
 				account, ok, err := svc.PollLogin(ctx, deviceID)
 				if err != nil {
-					continue
+					close(stopSpinner)
+					spinnerWG.Wait()
+					if verboseLogin {
+						fmt.Printf("[DEBUG] PollLogin error: %v\n", err)
+					}
+					return fmt.Errorf("authentication failed: %w", err)
 				}
 				if !ok {
+					if verboseLogin {
+						fmt.Printf("\r[DEBUG] Still waiting... (not authorized yet)\n")
+					}
 					continue
 				}
 				_ = auth.Save(auth.State{LoggedIn: true, Account: account})
@@ -136,6 +160,7 @@ If already logged in with valid credentials, it will skip the authentication flo
 
 func init() {
 	rootCmd.AddCommand(loginCmd)
+	loginCmd.Flags().BoolVarP(&verboseLogin, "verbose", "v", false, "Enable verbose debug output")
 	// Seed random number generator for greeting selection
 	rand.Seed(time.Now().UnixNano())
 }
