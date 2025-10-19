@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2025-10-19
+
+### Fixed
+- Add fallback to encrypted file storage when native keychain unavailable
+- Fixes compatibility with macOS beta versions (macOS 26+) and sandboxed environments
+- Credentials now stored in `~/.config/seedfast` when system keychain unavailable
+
 ## [1.0.1] - 2025-10-19
 
 ### Fixed
@@ -42,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - pterm for rich terminal output
 - Secure token storage using OS native keychains
 
-[Unreleased]: https://github.com/argon-it/seedfast-cli/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/argon-it/seedfast-cli/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/argon-it/seedfast-cli/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/argon-it/seedfast-cli/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/argon-it/seedfast-cli/releases/tag/v1.0.0
