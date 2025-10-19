@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.7] - 2025-10-19
+
+### Fixed
+- Fix "Specified keyring backend not available" on macOS 26.0 and newer
+- Remove hardcoded AllowedBackends restriction to support future macOS versions
+- Let keyring library automatically select best available backend
+
+### Changed
+- Keyring now adapts to platform-specific backends automatically
+- Better compatibility with macOS updates
+
 ## [1.0.6] - 2025-10-19
 
 ### Fixed
@@ -97,7 +108,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - pterm for rich terminal output
 - Secure token storage using OS native keychains
 
-[Unreleased]: https://github.com/argon-it/seedfast-cli/compare/v1.0.6...HEAD
+[Unreleased]: https://github.com/argon-it/seedfast-cli/compare/v1.0.7...HEAD
+[1.0.7]: https://github.com/argon-it/seedfast-cli/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/argon-it/seedfast-cli/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/argon-it/seedfast-cli/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/argon-it/seedfast-cli/compare/v1.0.3...v1.0.4

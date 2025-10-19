@@ -87,21 +87,25 @@ func MustGetManager() *Manager {
 	return manager
 }
 
-// openRing opens the OS keyring using a restricted set of backends.
-// Only macOS Keychain and Windows Credential Manager are allowed.
+// openRing opens the OS keyring using available backends.
+// Lets the library automatically select the best available backend for the platform.
 func openRing() (keyring.Keyring, error) {
-	// Restrict to darwin/windows explicitly; return an error elsewhere.
+	// Only support darwin/windows platforms
 	if runtime.GOOS != "darwin" && runtime.GOOS != "windows" {
 		return nil, errors.New("secure storage not supported on this OS (macOS/Windows only)")
 	}
+
 	cfg := keyring.Config{
-		ServiceName:     ServiceName,
-		AllowedBackends: []keyring.BackendType{keyring.KeychainBackend, keyring.WinCredBackend},
+		ServiceName: ServiceName,
+		// Let keyring library choose the best available backend
+		// This allows it to adapt to newer macOS versions
 	}
+
 	// Hint prefixes where supported to minimize namespace collisions
 	if runtime.GOOS == "windows" {
 		cfg.WinCredPrefix = ServiceName
 	}
+
 	return keyring.Open(cfg)
 }
 
