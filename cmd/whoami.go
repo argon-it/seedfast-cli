@@ -5,11 +5,16 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"seedfast/cli/internal/auth"
 	"seedfast/cli/internal/manifest"
 
 	"github.com/spf13/cobra"
+)
+
+var (
+	verboseWhoami bool
 )
 
 // whoamiCmd represents the whoami command for displaying current authentication state.
@@ -27,13 +32,25 @@ This command is useful for verifying authentication status before running
 other commands that require authentication.`,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Enable verbose mode for all modules if --verbose is set
+		if verboseWhoami {
+			os.Setenv("SEEDFAST_VERBOSE", "1")
+		}
+
 		ctx := cmd.Context()
 		st, err := auth.Load()
 		if err != nil {
 			// If auth state can't be loaded, treat as not logged in
+			if verboseWhoami {
+				fmt.Printf("[DEBUG] whoami: auth.Load() error: %v\n", err)
+			}
 			fmt.Println("🔒 You're not logged in yet!")
 			fmt.Println("   Run 'seedfast login' to get started.")
 			return nil
+		}
+
+		if verboseWhoami {
+			fmt.Printf("[DEBUG] whoami: auth.Load() success - LoggedIn: %v, Account: %s\n", st.LoggedIn, st.Account)
 		}
 
 		// Check if not logged in
@@ -91,6 +108,7 @@ other commands that require authentication.`,
 
 func init() {
 	rootCmd.AddCommand(whoamiCmd)
+	whoamiCmd.Flags().BoolVarP(&verboseWhoami, "verbose", "v", false, "Enable verbose debug output")
 }
 
 // getRandomWhoAmIPhrase returns a friendly phrase with the user's identifier

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2025-10-19
+
+### Added
+- Comprehensive verbose logging for macOS keychain debugging
+- `--verbose` flag for `whoami`, `connect`, and `seed` commands
+- Debug output shows auth state load/save flow step-by-step
+- Environment variable `SEEDFAST_VERBOSE=1` enables verbose mode globally
+
+### Changed
+- Security backend (macOS) now logs all Set/Get/Delete operations in verbose mode
+- Auth storage module logs all Load/Save operations with detailed state info
+- Commands show auth.Load() errors when `--verbose` flag is used
+
 ## [1.1.1] - 2025-10-19
 
 ### Fixed

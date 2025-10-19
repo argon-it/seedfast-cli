@@ -32,6 +32,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	verboseSeed bool
+)
+
 // seedCmd represents the seed command for executing database seeding operations.
 // It connects to the backend via gRPC bridge and orchestrates the seeding process,
 // handling task distribution, progress tracking, and user interactions for database seeding.
@@ -47,8 +51,16 @@ The command supports interactive seeding with progress indicators and can handle
 connection interruptions gracefully.`,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Enable verbose mode for all modules if --verbose is set
+		if verboseSeed {
+			os.Setenv("SEEDFAST_VERBOSE", "1")
+		}
+
 		st, err := auth.Load()
 		if err != nil || !st.LoggedIn {
+			if verboseSeed {
+				fmt.Printf("[DEBUG] seed: auth.Load() error or not logged in - err: %v, LoggedIn: %v\n", err, st.LoggedIn)
+			}
 			fmt.Println("⚠️  You need to be logged in to start seeding.")
 			fmt.Println("   Please run: seedfast login")
 			return nil
@@ -723,7 +735,10 @@ connection interruptions gracefully.`,
 	},
 }
 
-func init() { rootCmd.AddCommand(seedCmd) }
+func init() {
+	rootCmd.AddCommand(seedCmd)
+	seedCmd.Flags().BoolVarP(&verboseSeed, "verbose", "v", false, "Enable verbose debug output")
+}
 
 // deriveDBName extracts the database name from a PostgreSQL DSN URL.
 // It parses the DSN and returns the database name from the path component.

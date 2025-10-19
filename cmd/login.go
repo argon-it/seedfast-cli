@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
 	"os/exec"
 	"runtime"
 	"sync"
@@ -40,6 +41,11 @@ The command supports automatic browser opening on Windows, macOS, and Linux syst
 If already logged in with valid credentials, it will skip the authentication flow.`,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Enable verbose mode for all modules if --verbose is set
+		if verboseLogin {
+			os.Setenv("SEEDFAST_VERBOSE", "1")
+		}
+
 		baseCtx := cmd.Context()
 		ctx, cancel := context.WithTimeout(baseCtx, 5*time.Minute)
 		defer cancel()

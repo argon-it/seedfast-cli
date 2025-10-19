@@ -20,6 +20,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	verboseConnect bool
+)
+
 // connectCmd represents the connect command for establishing database connections.
 // It prompts the user for a PostgreSQL DSN and verifies connectivity before saving
 // the connection details securely in the OS keychain.
@@ -32,8 +36,16 @@ securely stored in the OS keychain for future use.
 
 Example DSN format: postgres://user:password@host:5432/database?sslmode=disable`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Enable verbose mode for all modules if --verbose is set
+		if verboseConnect {
+			os.Setenv("SEEDFAST_VERBOSE", "1")
+		}
+
 		st, err := auth.Load()
 		if err != nil || !st.LoggedIn {
+			if verboseConnect {
+				fmt.Printf("[DEBUG] connect: auth.Load() error or not logged in - err: %v, LoggedIn: %v\n", err, st.LoggedIn)
+			}
 			fmt.Println("⚠️  You need to be logged in to configure database connections.")
 			fmt.Println("   Please run: seedfast login")
 			return nil
@@ -132,4 +144,5 @@ Example DSN format: postgres://user:password@host:5432/database?sslmode=disable`
 
 func init() {
 	rootCmd.AddCommand(connectCmd)
+	connectCmd.Flags().BoolVarP(&verboseConnect, "verbose", "v", false, "Enable verbose debug output")
 }
