@@ -81,8 +81,8 @@ func (h *HTTP) RefreshToken(ctx context.Context, refreshToken string) (string, s
 	if err != nil {
 		return "", "", err
 	}
+	h.setStandardHeaders(req)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
 
 	resp, err := h.client.Do(req)
 	if err != nil {

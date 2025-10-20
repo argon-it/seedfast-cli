@@ -30,20 +30,21 @@ This command removes:
 - Any cached session information`,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Fetch manifest from server
+		// Try to logout from backend (best effort - don't fail if offline)
 		m, err := manifest.GetEndpoints(cmd.Context())
-		if err != nil {
-			return err
+		if err == nil {
+			svc := auth.NewService(m.HTTPBaseURL(), m.HTTP)
+			_ = svc.Logout(cmd.Context()) // Ignore error - best effort
 		}
 
-		svc := auth.NewService(m.HTTPBaseURL(), m.HTTP)
-		if err := svc.Logout(cmd.Context()); err != nil {
-			return err
-		}
+		// Always clear local credentials regardless of backend response
 		if km, err := keychain.GetManager(); err == nil {
+			_ = km.ClearAuth()
 			_ = km.ClearDB()
 		}
-		fmt.Println("All credentials and tokens have been removed")
+		_ = auth.Clear()
+
+		fmt.Println("✅ All credentials and tokens have been removed")
 		return nil
 	},
 }

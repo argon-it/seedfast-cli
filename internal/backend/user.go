@@ -31,6 +31,7 @@ func (h *HTTP) GetMe(ctx context.Context, accessToken string) (map[string]any, e
 		}
 		return nil, err
 	}
+	h.setStandardHeaders(req)
 	if accessToken != "" {
 		req.Header.Set("Authorization", "Bearer "+accessToken)
 	}

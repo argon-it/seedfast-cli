@@ -30,7 +30,8 @@ type HTTPEndpoints struct {
 	Logout        string `json:"device_logout"`         // e.g., "/api/cli/logout"
 	Me            string `json:"account_whoami"`             // e.g., "/api/cli/me"
 	Health        string `json:"health"`         // e.g., "/api/health"
-	Version       string `json:"version"`        // e.g., "/api/version"
+	Version       string `json:"version"`        // e.g., "/api/version" (backend version)
+	CLIVersion    string `json:"cli_version"`    // e.g., "/api/cli/version" (latest CLI version)
 }
 
 // HTTPBaseURL extracts the base URL from the gRPC agent address.

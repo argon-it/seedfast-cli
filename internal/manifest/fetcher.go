@@ -32,12 +32,16 @@ const manifestURL = "https://seedfa.st/cli-endpoints.json"
 
 // fetchFromServer retrieves the manifest from the server with signature verification.
 func fetchFromServer(ctx context.Context) (*Manifest, error) {
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := &http.Client{Timeout: 15 * time.Second}
 
 	req, err := http.NewRequestWithContext(ctx, "GET", manifestURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
 	}
+
+	// Add User-Agent header for better server compatibility
+	req.Header.Set("User-Agent", "seedfast-cli/1.0")
+	req.Header.Set("Accept", "application/json")
 
 	resp, err := client.Do(req)
 	if err != nil {

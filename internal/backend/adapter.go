@@ -12,6 +12,7 @@ import "context"
 // Implementations may call real HTTP/WS endpoints or provide mocks for tests.
 type API interface {
 	GetVersion(ctx context.Context) (string, error)
+	GetCLIVersion(ctx context.Context) (string, error)
 	BeginDeviceLink(ctx context.Context) (authURL string, userCode string, pollIntervalSeconds int, err error)
 	PollDeviceLink(ctx context.Context, userCode string) (accessToken string, refreshToken string, err error)
 	// CheckDevice validates the current access token with the backend and

@@ -68,6 +68,7 @@ func (s *Service) PollLogin(ctx context.Context, deviceID string) (string, bool,
 // First tries the new /api/cli/me endpoint (which has caching), then falls back
 // to CheckDevice, and finally local state if offline.
 // If token is expired, attempts to refresh. If refresh fails, logs out the user.
+// Returns email if available, otherwise user_id, otherwise "user".
 func (s *Service) WhoAmI(ctx context.Context) (string, bool, error) {
 	// Try to get keychain manager - if it fails, user is not logged in
 	km, err := keychain.GetManager()
@@ -80,15 +81,15 @@ func (s *Service) WhoAmI(ctx context.Context) (string, bool, error) {
 		// Try new /api/cli/me endpoint first (supports caching)
 		userData, meErr := s.be.GetMe(ctx, token)
 		if meErr == nil && userData != nil {
-			// Extract user identifier from various possible fields
+			// Extract user identifier - prefer email, then user_id, then id
+			if email, ok := userData["email"].(string); ok && email != "" {
+				return email, true, nil
+			}
 			if uid, ok := userData["user_id"].(string); ok && uid != "" {
 				return uid, true, nil
 			}
 			if uid, ok := userData["id"].(string); ok && uid != "" {
 				return uid, true, nil
-			}
-			if email, ok := userData["email"].(string); ok && email != "" {
-				return email, true, nil
 			}
 			// If userData exists but no identifier, still consider it valid
 			return "user", true, nil
@@ -100,14 +101,15 @@ func (s *Service) WhoAmI(ctx context.Context) (string, bool, error) {
 				// Retry with new token
 				if newToken, err := km.LoadAccessToken(); err == nil && newToken != "" {
 					if userData, err := s.be.GetMe(ctx, newToken); err == nil && userData != nil {
+						// Prefer email, then user_id, then id
+						if email, ok := userData["email"].(string); ok && email != "" {
+							return email, true, nil
+						}
 						if uid, ok := userData["user_id"].(string); ok && uid != "" {
 							return uid, true, nil
 						}
 						if uid, ok := userData["id"].(string); ok && uid != "" {
 							return uid, true, nil
-						}
-						if email, ok := userData["email"].(string); ok && email != "" {
-							return email, true, nil
 						}
 						return "user", true, nil
 					}

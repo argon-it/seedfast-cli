@@ -118,7 +118,8 @@ connection interruptions gracefully.`,
 			return errors.New("session invalid or expired; run 'seedfast login' again")
 		}
 		if err := br.Connect(cmd.Context(), addr, token); err != nil {
-			pterm.Error.Println(logging.PresentError("bridge connect failed", err))
+			pterm.Printf("❌ Failed to connect to Seedfast service\n")
+			pterm.Println(logging.PresentError("", err))
 			return err
 		}
 		// Ensure bridge is closed and token is cleared from memory when seeding finishes
@@ -127,7 +128,8 @@ connection interruptions gracefully.`,
 		}()
 		dbName := deriveDBName(dsn)
 		if err := br.Init(cmd.Context(), "", dbName); err != nil {
-			pterm.Error.Println(logging.PresentError("bridge init failed", err))
+			pterm.Printf("❌ Failed to initialize seeding session\n")
+			pterm.Println(logging.PresentError("", err))
 			return err
 		}
 
@@ -187,7 +189,8 @@ connection interruptions gracefully.`,
 		// Open DB pool silently; avoid noisy spinners
 		pool, err := pgxpool.New(cmd.Context(), dsn)
 		if err != nil {
-			pterm.Error.Println(logging.PresentError("db connect failed", err))
+			pterm.Printf("❌ Failed to connect to database\n")
+			pterm.Println(logging.PresentError("", err))
 			return err
 		}
 		defer pool.Close()
@@ -395,7 +398,15 @@ connection interruptions gracefully.`,
 						planningActive = false
 					}
 					stopArea()
-					pterm.Error.Printf("Connection lost: %s :(\n", logging.Mask(streamErr.Error()))
+					pterm.Printf("❌ Connection to Seedfast service was lost\n")
+					pterm.Println()
+					pterm.Println("The seeding session was interrupted. This could mean:")
+					pterm.Println("  • Network connection dropped")
+					pterm.Println("  • Service is restarting or under maintenance")
+					pterm.Println("  • Session timeout")
+					pterm.Println()
+					pterm.Println("Please try running 'seedfast seed' again.")
+					pterm.Println()
 					// Cancel workers to expedite shutdown
 					cancel()
 					earlyNotified = true
@@ -706,7 +717,15 @@ connection interruptions gracefully.`,
 		elapsed := time.Since(startAt).Round(time.Millisecond)
 		if streamErr != nil {
 			if !earlyNotified {
-				pterm.Error.Printf("Connection lost after %s: %s :(\n", elapsed, logging.Mask(streamErr.Error()))
+				pterm.Printf("❌ Connection to Seedfast service was lost after %s\n", elapsed)
+				pterm.Println()
+				pterm.Println("The seeding session was interrupted. This could mean:")
+				pterm.Println("  • Network connection dropped")
+				pterm.Println("  • Service is restarting or under maintenance")
+				pterm.Println("  • Session timeout")
+				pterm.Println()
+				pterm.Println("Please try running 'seedfast seed' again.")
+				pterm.Println()
 			}
 			return streamErr
 		}
@@ -737,7 +756,8 @@ connection interruptions gracefully.`,
 
 func init() {
 	rootCmd.AddCommand(seedCmd)
-	seedCmd.Flags().BoolVarP(&verboseSeed, "verbose", "v", false, "Enable verbose debug output")
+	// Verbose flag temporarily disabled
+	// seedCmd.Flags().BoolVarP(&verboseSeed, "verbose", "v", false, "Enable verbose debug output")
 }
 
 // deriveDBName extracts the database name from a PostgreSQL DSN URL.

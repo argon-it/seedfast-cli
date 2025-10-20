@@ -23,6 +23,8 @@ func (h *HTTP) BeginDeviceLink(ctx context.Context) (string, string, int, error)
 	if err != nil {
 		return "", "", 0, err
 	}
+	h.setStandardHeaders(req)
+
 	resp, err := h.client.Do(req)
 	if err != nil {
 		return "", "", 0, err
@@ -196,8 +198,8 @@ func (h *HTTP) tryVerifyPostJSON(ctx context.Context, body map[string]string, pa
 	if err != nil {
 		return "", "", false
 	}
+	h.setStandardHeaders(req)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json, */*")
 
 	resp, err := h.client.Do(req)
 	if err != nil {
@@ -232,6 +234,7 @@ func (h *HTTP) CheckDevice(ctx context.Context, accessToken string) (string, err
 	if err != nil {
 		return "", err
 	}
+	h.setStandardHeaders(req)
 	if accessToken != "" {
 		req.Header.Set("Authorization", "Bearer "+accessToken)
 	}
@@ -266,6 +269,7 @@ func (h *HTTP) Logout(ctx context.Context, accessToken string) error {
 	if err != nil {
 		return err
 	}
+	h.setStandardHeaders(req)
 	if accessToken != "" {
 		req.Header.Set("Authorization", "Bearer "+accessToken)
 	}

@@ -133,7 +133,7 @@ func handleAskHuman(
 	}
 	prompt := strings.TrimSpace(payload.Question)
 	if prompt == "" {
-		prompt = "Press Enter to accept the proposed scope and continue. Or type any message to send to the planner."
+		prompt = "Do you agree with this scope?\nYou can answer 'yes'/'no' or provide detailed feedback about the proposed tables."
 	}
 	pterm.Println(prompt)
 	promptText := "Your answer: "
@@ -142,12 +142,14 @@ func handleAskHuman(
 	ans, _ := reader.ReadString('\n')
 	ans = strings.TrimSpace(ans)
 
-	// Clear the "Your answer:" prompt and user input from terminal
-	terminal.ClearPreviousLines(len(promptText) + len(ans))
+	// Clear the prompt lines, "Your answer:" prompt, and user input from terminal
+	// Total characters to clear: all prompt characters + answer prompt + user input
+	totalChars := len(prompt) + len(promptText) + len(ans)
+	terminal.ClearPreviousLines(totalChars)
 
 	var respObj map[string]any
 	if ans == "" {
-		pterm.Info.Println("Empty input interpreted as acceptance. Continuing with the proposed scope.")
+		pterm.Println("Empty input interpreted as acceptance. Continuing with the proposed scope.")
 		respObj = map[string]any{
 			"human_answer": true,
 			"question_id":  payload.QuestionID,

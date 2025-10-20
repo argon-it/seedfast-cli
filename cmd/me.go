@@ -14,16 +14,16 @@ import (
 )
 
 var (
-	verboseWhoami bool
+	verboseMe bool
 )
 
-// whoamiCmd represents the whoami command for displaying current authentication state.
+// meCmd represents the me command for displaying current authentication state.
 // It shows the currently authenticated account information by validating the current
 // session with the backend service.
-var whoamiCmd = &cobra.Command{
-	Use:   "whoami",
+var meCmd = &cobra.Command{
+	Use:   "me",
 	Short: "Show current authenticated account",
-	Long: `The whoami command displays information about the currently authenticated account.
+	Long: `The me command displays information about the currently authenticated account.
 It validates the current session by checking with the backend service and shows
 the account identifier if authentication is valid.
 
@@ -33,7 +33,7 @@ other commands that require authentication.`,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Enable verbose mode for all modules if --verbose is set
-		if verboseWhoami {
+		if verboseMe {
 			os.Setenv("SEEDFAST_VERBOSE", "1")
 		}
 
@@ -41,16 +41,16 @@ other commands that require authentication.`,
 		st, err := auth.Load()
 		if err != nil {
 			// If auth state can't be loaded, treat as not logged in
-			if verboseWhoami {
-				fmt.Printf("[DEBUG] whoami: auth.Load() error: %v\n", err)
+			if verboseMe {
+				fmt.Printf("[DEBUG] me: auth.Load() error: %v\n", err)
 			}
 			fmt.Println("🔒 You're not logged in yet!")
 			fmt.Println("   Run 'seedfast login' to get started.")
 			return nil
 		}
 
-		if verboseWhoami {
-			fmt.Printf("[DEBUG] whoami: auth.Load() success - LoggedIn: %v, Account: %s\n", st.LoggedIn, st.Account)
+		if verboseMe {
+			fmt.Printf("[DEBUG] me: auth.Load() success - LoggedIn: %v, Account: %s\n", st.LoggedIn, st.Account)
 		}
 
 		// Check if not logged in
@@ -73,30 +73,30 @@ other commands that require authentication.`,
 		if err == nil && userData != nil {
 			// Try to extract email
 			if email, ok := userData["email"].(string); ok && email != "" {
-				fmt.Println(getRandomWhoAmIPhrase(email))
+				fmt.Println(getMePhrase(email))
 				return nil
 			}
 			// Fallback to user_id
 			if userID, ok := userData["user_id"].(string); ok && userID != "" {
-				fmt.Println(getRandomWhoAmIPhrase(userID))
+				fmt.Println(getMePhrase(userID))
 				return nil
 			}
 			// Fallback to id
 			if id, ok := userData["id"].(string); ok && id != "" {
-				fmt.Println(getRandomWhoAmIPhrase(id))
+				fmt.Println(getMePhrase(id))
 				return nil
 			}
 		}
 
 		// Fallback: Try WhoAmI
 		if account, ok, err := svc.WhoAmI(ctx); err == nil && ok {
-			fmt.Println(getRandomWhoAmIPhrase(account))
+			fmt.Println(getMePhrase(account))
 			return nil
 		}
 
 		// Final fallback to local state
 		if st.LoggedIn && st.Account != "" {
-			fmt.Println(getRandomWhoAmIPhrase(st.Account))
+			fmt.Println(getMePhrase(st.Account))
 			return nil
 		}
 
@@ -107,11 +107,11 @@ other commands that require authentication.`,
 }
 
 func init() {
-	rootCmd.AddCommand(whoamiCmd)
-	whoamiCmd.Flags().BoolVarP(&verboseWhoami, "verbose", "v", false, "Enable verbose debug output")
+	rootCmd.AddCommand(meCmd)
+	meCmd.Flags().BoolVarP(&verboseMe, "verbose", "v", false, "Enable verbose debug output")
 }
 
-// getRandomWhoAmIPhrase returns a friendly phrase with the user's identifier
-func getRandomWhoAmIPhrase(identifier string) string {
+// getMePhrase returns a friendly phrase with the user's identifier
+func getMePhrase(identifier string) string {
 	return fmt.Sprintf("👤 Current user: %s", identifier)
 }
