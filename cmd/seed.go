@@ -19,6 +19,7 @@ import (
 	"seedfast/cli/internal/auth"
 	bbridge "seedfast/cli/internal/bridge"
 	"seedfast/cli/internal/bridge/model"
+	"seedfast/cli/internal/dsn"
 	"seedfast/cli/internal/keychain"
 	"seedfast/cli/internal/logging"
 	"seedfast/cli/internal/manifest"
@@ -81,23 +82,34 @@ connection interruptions gracefully.`,
 		br := bbridge.New()
 
 		// Pre-seed check: resolve DSN from env or keychain (not from config)
-		dsn := ""
+		rawDSN := ""
 		if env := os.Getenv("SEEDFAST_DSN"); strings.TrimSpace(env) != "" {
-			dsn = strings.TrimSpace(env)
+			rawDSN = strings.TrimSpace(env)
 		} else if env := os.Getenv("DATABASE_URL"); strings.TrimSpace(env) != "" {
-			dsn = strings.TrimSpace(env)
+			rawDSN = strings.TrimSpace(env)
 		}
-		if strings.TrimSpace(dsn) == "" {
+		if strings.TrimSpace(rawDSN) == "" {
 			if km, err := keychain.GetManager(); err == nil {
 				if v, err := km.LoadDBDSN(); err == nil && strings.TrimSpace(v) != "" {
-					dsn = strings.TrimSpace(v)
+					rawDSN = strings.TrimSpace(v)
 				}
 			}
 		}
-		if strings.TrimSpace(dsn) == "" {
+		if strings.TrimSpace(rawDSN) == "" {
 			fmt.Println("⚠️  No database connection configured.")
 			fmt.Println("   Please run 'seedfast connect' to configure your database,")
 			return nil
+		}
+
+		// Parse and normalize the DSN to handle special characters
+		normalizedDSN, err := dsn.Parse(rawDSN)
+		if err != nil {
+			fmt.Println("❌ Invalid database connection string.")
+			if parseErr, ok := err.(*dsn.ParseError); ok {
+				fmt.Println("   " + parseErr.Error())
+			}
+			fmt.Println("   Please run 'seedfast connect' to reconfigure your database.")
+			return err
 		}
 
 		// Use gRPC address from manifest (no fallback)
@@ -126,7 +138,7 @@ connection interruptions gracefully.`,
 		defer func() {
 			_ = br.Close(cmd.Context())
 		}()
-		dbName := deriveDBName(dsn)
+		dbName := deriveDBName(normalizedDSN)
 		if err := br.Init(cmd.Context(), "", dbName); err != nil {
 			pterm.Printf("❌ Failed to initialize seeding session\n")
 			pterm.Println(logging.PresentError("", err))
@@ -187,7 +199,7 @@ connection interruptions gracefully.`,
 		startHeader()
 
 		// Open DB pool silently; avoid noisy spinners
-		pool, err := pgxpool.New(cmd.Context(), dsn)
+		pool, err := pgxpool.New(cmd.Context(), normalizedDSN)
 		if err != nil {
 			pterm.Printf("❌ Failed to connect to database\n")
 			pterm.Println(logging.PresentError("", err))
@@ -398,15 +410,8 @@ connection interruptions gracefully.`,
 						planningActive = false
 					}
 					stopArea()
-					pterm.Printf("❌ Connection to Seedfast service was lost\n")
-					pterm.Println()
-					pterm.Println("The seeding session was interrupted. This could mean:")
-					pterm.Println("  • Network connection dropped")
-					pterm.Println("  • Service is restarting or under maintenance")
-					pterm.Println("  • Session timeout")
-					pterm.Println()
-					pterm.Println("Please try running 'seedfast seed' again.")
-					pterm.Println()
+					// Display user-friendly error message
+					logging.PresentStreamError(ev.Message)
 					// Cancel workers to expedite shutdown
 					cancel()
 					earlyNotified = true
@@ -717,15 +722,8 @@ connection interruptions gracefully.`,
 		elapsed := time.Since(startAt).Round(time.Millisecond)
 		if streamErr != nil {
 			if !earlyNotified {
-				pterm.Printf("❌ Connection to Seedfast service was lost after %s\n", elapsed)
-				pterm.Println()
-				pterm.Println("The seeding session was interrupted. This could mean:")
-				pterm.Println("  • Network connection dropped")
-				pterm.Println("  • Service is restarting or under maintenance")
-				pterm.Println("  • Session timeout")
-				pterm.Println()
-				pterm.Println("Please try running 'seedfast seed' again.")
-				pterm.Println()
+				pterm.Printf("Session duration: %s\n", elapsed)
+				logging.PresentStreamError(streamErr.Error())
 			}
 			return streamErr
 		}

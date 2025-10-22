@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"seedfast/cli/internal/auth"
+	"seedfast/cli/internal/dsn"
 	"seedfast/cli/internal/keychain"
 	"seedfast/cli/internal/terminal"
 
@@ -54,14 +55,26 @@ Example DSN format: postgres://user:password@host:5432/database?sslmode=disable`
 		reader := bufio.NewReader(os.Stdin)
 		promptText := "Enter Postgres DSN (e.g., postgres://user:pass@host:5432/db?sslmode=disable): "
 		fmt.Print(promptText)
-		dsn, _ := reader.ReadString('\n')
-		dsn = strings.TrimSpace(dsn)
+		rawDSN, _ := reader.ReadString('\n')
+		rawDSN = strings.TrimSpace(rawDSN)
 
 		// Clear the prompt and user input from terminal
-		terminal.ClearPreviousLines(len(promptText) + len(dsn))
+		terminal.ClearPreviousLines(len(promptText) + len(rawDSN))
 
-		if dsn == "" {
+		if rawDSN == "" {
 			return errors.New("DSN is required")
+		}
+
+		// Parse and normalize the DSN to handle special characters
+		normalizedDSN, err := dsn.Parse(rawDSN)
+		if err != nil {
+			if parseErr, ok := err.(*dsn.ParseError); ok {
+				fmt.Println("❌ " + parseErr.Error())
+				return parseErr
+			}
+			fmt.Println("❌ Invalid DSN format. Please check your connection string and try again.")
+			fmt.Println("   Example: postgres://user:password@host:5432/database?sslmode=disable")
+			return err
 		}
 
 		// Start lightweight inline spinner (Windows-friendly)
@@ -101,11 +114,11 @@ Example DSN format: postgres://user:password@host:5432/database?sslmode=disable`
 		// Verify connection
 		ctxPing, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
-		pool, err := pgxpool.New(ctxPing, dsn)
+		pool, err := pgxpool.New(ctxPing, normalizedDSN)
 		if err != nil {
 			stopSpinner()
-			fmt.Println("Invalid DSN format. Please check your connection string and try again.")
-			fmt.Println("Example: postgres://user:password@host:5432/database?sslmode=disable")
+			fmt.Println("❌ Invalid DSN format. Please check your connection string and try again.")
+			fmt.Println("   Example: postgres://user:password@host:5432/database?sslmode=disable")
 			return err
 		}
 		defer pool.Close()
@@ -123,7 +136,7 @@ Example DSN format: postgres://user:password@host:5432/database?sslmode=disable`
 		// Stop spinner and overwrite with success message
 		stopSpinner()
 
-		// Save DSN securely in the OS keychain
+		// Save normalized DSN securely in the OS keychain
 		km, err := keychain.GetManager()
 		if err != nil {
 			fmt.Println("❌ Secure storage is not available on this system.")
@@ -131,7 +144,7 @@ Example DSN format: postgres://user:password@host:5432/database?sslmode=disable`
 			fmt.Println("   Connection verified but not saved.")
 			return err
 		}
-		if err := km.SaveDBDSN(dsn); err != nil {
+		if err := km.SaveDBDSN(normalizedDSN); err != nil {
 			fmt.Println("❌ Failed to save connection details securely.")
 			return err
 		}
