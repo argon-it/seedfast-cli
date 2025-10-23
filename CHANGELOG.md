@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.7] - 2025-10-19
+## [1.1.20] - 2025-10-23
 
 ### Added
 - Display database connection info (masked DSN) at start of `seed` command
@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced user prompt for seeding scope with color-coded options
 - Users can now see exactly which database they're seeding before starting
 - Better guidance for accepting, rejecting, or providing feedback on scope
+
+### Removed
+- Removed Go test files from the project
 
 ## [1.1.6] - 2025-10-19
 
