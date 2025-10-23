@@ -112,6 +112,14 @@ connection interruptions gracefully.`,
 			return err
 		}
 
+		// Display database connection info (masked)
+		maskedDSN := logging.Mask(normalizedDSN)
+		dbName := deriveDBName(normalizedDSN)
+		pterm.Println()
+		pterm.Println(pterm.NewStyle(pterm.FgLightCyan).Sprint("→ Database:   ") + pterm.NewStyle(pterm.FgCyan, pterm.Bold).Sprint(dbName))
+		pterm.Println(pterm.NewStyle(pterm.FgLightCyan).Sprint("→ Connection: ") + pterm.NewStyle(pterm.FgLightBlue).Sprint(maskedDSN))
+		pterm.Println()
+
 		// Use gRPC address from manifest (no fallback)
 		addr := m.GRPCAddress()
 
@@ -138,7 +146,6 @@ connection interruptions gracefully.`,
 		defer func() {
 			_ = br.Close(cmd.Context())
 		}()
-		dbName := deriveDBName(normalizedDSN)
 		if err := br.Init(cmd.Context(), "", dbName); err != nil {
 			pterm.Printf("❌ Failed to initialize seeding session\n")
 			pterm.Println(logging.PresentError("", err))
@@ -536,10 +543,20 @@ connection interruptions gracefully.`,
 							scopeShown = true
 						}
 						prompt := payload.Question
-						if strings.TrimSpace(prompt) == "" {
-							prompt = "Press Enter to accept the proposed scope and continue. Or type any message to send to the planner."
+						pterm.Println()
+
+						// Show custom question if provided by backend
+						if strings.TrimSpace(prompt) != "" {
+							pterm.Println(pterm.NewStyle(pterm.FgYellow, pterm.Bold).Sprint(prompt))
+						} else {
+							pterm.Println(pterm.NewStyle(pterm.FgYellow, pterm.Bold).Sprint("Do you agree with this seeding scope?"))
 						}
-						pterm.Println(prompt)
+
+						// Always show options
+						pterm.Println("  • Press " + pterm.NewStyle(pterm.FgGreen).Sprint("Enter") + " or type " + pterm.NewStyle(pterm.FgGreen).Sprint("yes") + " to accept and continue")
+						pterm.Println("  • Type " + pterm.NewStyle(pterm.FgRed).Sprint("no") + " to reject")
+						pterm.Println("  • Or provide detailed feedback/instructions to refine the scope")
+						pterm.Println()
 						pterm.Print("Your answer: ")
 						reader := bufio.NewReader(os.Stdin)
 						ans, _ := reader.ReadString('\n')
